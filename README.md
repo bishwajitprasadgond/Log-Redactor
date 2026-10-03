@@ -10,58 +10,6 @@ The application operates as a standalone, zero-dependency executable (`LogRedact
 
 ![Log Redactor User Interface](snapshot.png)
 
-```
-+------------------------------------------------------------------------------------------------------------+
-|  Log Redactor - Enterprise Streaming Redaction Utility                                             _  [] X |
-+------------------------------------------------------------------------------------------------------------+
-|                                                                                                            |
-|   +----------------------------------------------------------------------------------------------------+   |
-|   |  Drag & Drop Log File Here (.log, .txt, .out, .csv, .json)                                         |   |
-|   |  Supports multi-gigabyte files processed in constant ~5 MB memory                                  |   |
-|   |                                                                                                    |   |
-|   |                                          [ Browse... ]                                             |   |
-|   +----------------------------------------------------------------------------------------------------+   |
-|                                                                                                            |
-|   Input File:   [ C:\logs\production_cluster_access.log                              ]   [ Browse... ]     |
-|   Output File:  [ C:\logs\production_cluster_access_redacted.log                     ]   [ Browse... ]     |
-|                                                                                                            |
-|   +----------------------------------------------------------------------------------------------------+   |
-|   |  Active Redaction Rules (Network, Credentials & PII)                                               |   |
-|   |                                                                                                    |   |
-|   |  [X] IPv4 Addresses       [X] IPv6 Addresses       [X] MAC Addresses        [X] Port Numbers       |   |
-|   |  [X] Domains / Hosts      [X] Email Addresses      [X] Phone Numbers        [X] Windows Paths      |   |
-|   |  [X] JWT Tokens           [X] API Keys / Tokens    [X] Credit Card / PAN    [X] Aadhaar IDs        |   |
-|   |                                                                                                    |   |
-|   |  Select All  Clear All                                                                             |   |
-|   +----------------------------------------------------------------------------------------------------+   |
-|                                                                                                            |
-|   [ REDACT LOG ]   [ Cancel ]   [ Preview Sample (50 Lines) ]                                              |
-|                                                                                                            |
-|   ======================================================================================================   |
-|   Status: Completed successfully.                          35,000 lines | 94,494 masks applied | 1.5 MB/s  |
-|                                                                                                            |
-|   +----------------------------------------------------------------------------------------------------+   |
-|   |  Activity Log & Sample Preview                                                                     |   |
-|   |                                                                                                    |   |
-|   |  Starting redaction stream...                                                                      |   |
-|   |  Input:  C:\logs\production_cluster_access.log                                                     |   |
-|   |  Output: C:\logs\production_cluster_access_redacted.log                                            |   |
-|   |                                                                                                    |   |
-|   |  --------------------------------------------------                                                |   |
-|   |  Execution Summary:                                                                                |   |
-|   |    Status:             Success                                                                     |   |
-|   |    Total File Size:    8.25 MB                                                                     |   |
-|   |    Total Lines:        35,000                                                                      |   |
-|   |    Redactions Applied: 94,494                                                                      |   |
-|   |    Elapsed Time:       4.67 s                                                                      |   |
-|   |    Throughput Rate:    1.76 MB/s                                                                   |   |
-|   |    Output Location:    C:\logs\production_cluster_access_redacted.log                              |   |
-|   |  --------------------------------------------------                                                |   |
-|   +----------------------------------------------------------------------------------------------------+   |
-|                                                                                                            |
-+------------------------------------------------------------------------------------------------------------+
-```
-
 ---
 
 ## Project Structure & Subfolder Layout
