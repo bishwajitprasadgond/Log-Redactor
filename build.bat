@@ -5,7 +5,6 @@ echo ========================================================
 echo   Enterprise Log Redactor - Build Automation
 echo ========================================================
 
-REM 1. Try Windows native .NET Framework CSC compiler (Zero external dependencies)
 set CSC_EXE=C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 
 if not exist "%CSC_EXE%" (
@@ -14,8 +13,9 @@ if not exist "%CSC_EXE%" (
 
 if exist "%CSC_EXE%" (
     echo [*] Found Windows Native C# Compiler: %CSC_EXE%
-    echo [*] Compiling standalone Windows Forms LogRedactor.exe...
-    "%CSC_EXE%" /target:winexe /platform:anycpu /optimize+ /out:LogRedactor.exe /r:System.dll,System.Core.dll,System.Drawing.dll,System.Windows.Forms.dll Program.cs MainForm.cs RedactionEngine.cs StreamingLogProcessor.cs Models.cs
+    echo [*] Compiling standalone LogRedactor.exe from src subfolders...
+    
+    "%CSC_EXE%" /target:winexe /platform:anycpu /optimize+ /out:LogRedactor.exe /r:System.dll,System.Core.dll,System.Drawing.dll,System.Windows.Forms.dll src\Program.cs src\UI\MainForm.cs src\Engine\RedactionEngine.cs src\IO\StreamingLogProcessor.cs src\Models\Models.cs
     
     if !ERRORLEVEL! equ 0 (
         echo.
@@ -27,7 +27,6 @@ if exist "%CSC_EXE%" (
     )
 )
 
-REM 2. Fallback to .NET CLI if available in developer environments
 where dotnet >nul 2>&1
 if !ERRORLEVEL! equ 0 (
     echo [*] Found dotnet CLI. Publishing single-file release...

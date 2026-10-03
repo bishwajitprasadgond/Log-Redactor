@@ -6,6 +6,92 @@ The application operates as a standalone, zero-dependency executable (`LogRedact
 
 ---
 
+## User Interface Snapshot
+
+![Log Redactor User Interface](snapshot.png)
+
+```
++------------------------------------------------------------------------------------------------------------+
+|  Log Redactor - Enterprise Streaming Redaction Utility                                             _  [] X |
++------------------------------------------------------------------------------------------------------------+
+|                                                                                                            |
+|   +----------------------------------------------------------------------------------------------------+   |
+|   |  Drag & Drop Log File Here (.log, .txt, .out, .csv, .json)                                         |   |
+|   |  Supports multi-gigabyte files processed in constant ~5 MB memory                                  |   |
+|   |                                                                                                    |   |
+|   |                                          [ Browse... ]                                             |   |
+|   +----------------------------------------------------------------------------------------------------+   |
+|                                                                                                            |
+|   Input File:   [ C:\logs\production_cluster_access.log                              ]   [ Browse... ]     |
+|   Output File:  [ C:\logs\production_cluster_access_redacted.log                     ]   [ Browse... ]     |
+|                                                                                                            |
+|   +----------------------------------------------------------------------------------------------------+   |
+|   |  Active Redaction Rules (Network, Credentials & PII)                                               |   |
+|   |                                                                                                    |   |
+|   |  [X] IPv4 Addresses       [X] IPv6 Addresses       [X] MAC Addresses        [X] Port Numbers       |   |
+|   |  [X] Domains / Hosts      [X] Email Addresses      [X] Phone Numbers        [X] Windows Paths      |   |
+|   |  [X] JWT Tokens           [X] API Keys / Tokens    [X] Credit Card / PAN    [X] Aadhaar IDs        |   |
+|   |                                                                                                    |   |
+|   |  Select All  Clear All                                                                             |   |
+|   +----------------------------------------------------------------------------------------------------+   |
+|                                                                                                            |
+|   [ REDACT LOG ]   [ Cancel ]   [ Preview Sample (50 Lines) ]                                              |
+|                                                                                                            |
+|   ======================================================================================================   |
+|   Status: Completed successfully.                          35,000 lines | 94,494 masks applied | 1.5 MB/s  |
+|                                                                                                            |
+|   +----------------------------------------------------------------------------------------------------+   |
+|   |  Activity Log & Sample Preview                                                                     |   |
+|   |                                                                                                    |   |
+|   |  Starting redaction stream...                                                                      |   |
+|   |  Input:  C:\logs\production_cluster_access.log                                                     |   |
+|   |  Output: C:\logs\production_cluster_access_redacted.log                                            |   |
+|   |                                                                                                    |   |
+|   |  --------------------------------------------------                                                |   |
+|   |  Execution Summary:                                                                                |   |
+|   |    Status:             Success                                                                     |   |
+|   |    Total File Size:    8.25 MB                                                                     |   |
+|   |    Total Lines:        35,000                                                                      |   |
+|   |    Redactions Applied: 94,494                                                                      |   |
+|   |    Elapsed Time:       4.67 s                                                                      |   |
+|   |    Throughput Rate:    1.76 MB/s                                                                   |   |
+|   |    Output Location:    C:\logs\production_cluster_access_redacted.log                              |   |
+|   |  --------------------------------------------------                                                |   |
+|   +----------------------------------------------------------------------------------------------------+   |
+|                                                                                                            |
++------------------------------------------------------------------------------------------------------------+
+```
+
+---
+
+## Project Structure & Subfolder Layout
+
+The project source code is segregated into clean modular subfolders:
+
+```
+LogRedactor/
+├── src/                                # Application Source Code
+│   ├── Program.cs                      # Main application entry point & STAThread bootstrap
+│   ├── UI/
+│   │   └── MainForm.cs                 # Clean Windows Forms UI (Drag & Drop, Options, Progress)
+│   ├── Engine/
+│   │   └── RedactionEngine.cs          # High-performance compiled regex filter bank & evaluators
+│   ├── IO/
+│   │   └── StreamingLogProcessor.cs    # Multi-GB 64KB buffered stream processor with cancellation
+│   └── Models/
+│       └── Models.cs                   # Configuration DTOs, options, and telemetry reporting models
+│
+├── tools/                              # Enterprise Developer Utilities & Benchmarks
+│   └── GenerateSampleLogs.cs           # Multi-MB enterprise test log generator script
+│
+├── snapshot.png                        # User interface visual snapshot
+├── LogRedactor.csproj                  # Modern .NET SDK project file (.NET 8 Windows Forms)
+├── build.bat                           # 1-Click native Windows C# compiler build script
+└── README.md                           # Comprehensive documentation & architecture specifications
+```
+
+---
+
 ## Architecture Diagrams
 
 ### 1. System Architecture and Component Layering
@@ -13,7 +99,7 @@ The application operates as a standalone, zero-dependency executable (`LogRedact
 ```mermaid
 graph TD
     subgraph UI_Layer [Presentation Layer - Windows Forms]
-        MainForm[MainForm.cs]
+        MainForm[src/UI/MainForm.cs]
         DropZone[Drag and Drop Ingestion]
         OptionsCard[Rule Selection Checkboxes]
         ProgressTelemetry[Progress and Throughput Reporter]
@@ -21,10 +107,10 @@ graph TD
     end
 
     subgraph Core_Engine [Core Processing Pipeline]
-        Processor[StreamingLogProcessor.cs]
-        Engine[RedactionEngine.cs]
+        Processor[src/IO/StreamingLogProcessor.cs]
+        Engine[src/Engine/RedactionEngine.cs]
         RulesBank[Compiled Regex Filter Bank]
-        Models[Models.cs - Telemetry and DTOs]
+        Models[src/Models/Models.cs - Telemetry and DTOs]
     end
 
     subgraph IO_Layer [Buffered Streaming I/O]
@@ -178,23 +264,6 @@ The user interface is built on native Windows Forms, customized for enterprise e
 
 ---
 
-## Source Structure
-
-```
-LogRedactor/
-├── LogRedactor.csproj          # .NET SDK project configuration
-├── Program.cs                  # Entry point
-├── MainForm.cs                 # Windows Forms user interface implementation
-├── RedactionEngine.cs          # Regular expression filter bank and rule evaluator
-├── StreamingLogProcessor.cs    # Multi-GB buffered stream engine
-├── Models.cs                   # Configuration parameters and telemetry data models
-├── GenerateSampleLogs.cs       # Multi-MB enterprise test log generator
-├── build.bat                   # Automation script for native compilation
-└── README.md                   # System documentation
-```
-
----
-
 ## Build Instructions
 
 ### Method 1: Native Windows Compiler (Zero Installation)
@@ -218,7 +287,7 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 To generate synthetic enterprise server logs for validation and throughput benchmarking:
 
 ```cmd
-csc /target:exe /out:GenerateSampleLogs.exe GenerateSampleLogs.cs
+csc /target:exe /out:GenerateSampleLogs.exe tools\GenerateSampleLogs.cs
 GenerateSampleLogs.exe 35000
 ```
 

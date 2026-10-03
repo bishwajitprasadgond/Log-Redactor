@@ -1,6 +1,6 @@
 using System;
 
-namespace LogRedactor
+namespace LogRedactor.Models
 {
     [Flags]
     public enum RedactionCategory
@@ -38,7 +38,6 @@ namespace LogRedactor
         public bool MaskUrlSensitive { get; set; }
         public bool MaskWindowsUserPath { get; set; }
 
-        // Custom tags format configuration
         public string TagIPv4 { get; set; }
         public string TagIPv6 { get; set; }
         public string TagMacAddress { get; set; }

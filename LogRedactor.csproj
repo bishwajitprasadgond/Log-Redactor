@@ -21,7 +21,16 @@
     <TieredCompilation>true</TieredCompilation>
     <TieredCompilationQuickJit>true</TieredCompilationQuickJit>
     <ServerGarbageCollection>true</ServerGarbageCollection>
-    <ApplicationIcon></ApplicationIcon>
   </PropertyGroup>
+
+  <!-- Include source hierarchy -->
+  <ItemGroup>
+    <Compile Include="src\**\*.cs" />
+  </ItemGroup>
+
+  <!-- Exclude sample tools from application build -->
+  <ItemGroup>
+    <Compile Remove="tools\**\*.cs" />
+  </ItemGroup>
 
 </Project>

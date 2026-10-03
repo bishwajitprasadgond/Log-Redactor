@@ -3,19 +3,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using LogRedactor.Engine;
+using LogRedactor.Models;
 
-namespace LogRedactor
+namespace LogRedactor.IO
 {
     public class StreamingLogProcessor
     {
-        // Enterprise optimized buffer size: 64 KB for high-throughput sequential disk I/O
         private const int BufferSize = 65536;
 
         public event Action<ProcessingProgressReport> ProgressChanged;
 
-        /// <summary>
-        /// Streams and processes multi-gigabyte files with constant, tiny memory footprint.
-        /// </summary>
         public ProcessingSummary ProcessFile(
             string inputFilePath,
             string outputFilePath,
@@ -43,11 +41,9 @@ namespace LogRedactor
 
             var engine = new RedactionEngine(options);
 
-            // Throttle UI progress notifications to avoid UI message loop saturation
             long lastReportTicks = 0;
-            long reportIntervalTicks = Stopwatch.Frequency / 10; // 10 updates per second
+            long reportIntervalTicks = Stopwatch.Frequency / 10;
 
-            // Ensure directory exists for output
             string outDir = Path.GetDirectoryName(outputFilePath);
             if (!string.IsNullOrEmpty(outDir) && !Directory.Exists(outDir))
             {
@@ -56,7 +52,6 @@ namespace LogRedactor
 
             try
             {
-                // Open streams with sequential scan optimization and dedicated large buffers
                 using (var inStream = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.SequentialScan))
                 using (var reader = new StreamReader(inStream, Encoding.UTF8, true, BufferSize))
                 using (var outStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize))
@@ -73,7 +68,6 @@ namespace LogRedactor
                             break;
                         }
 
-                        // Approximate bytes read from underlying stream position
                         bytesRead = inStream.Position;
                         linesProcessed++;
 
@@ -83,7 +77,6 @@ namespace LogRedactor
 
                         writer.WriteLine(redactedLine);
 
-                        // Report progress throttled
                         long currentTicks = stopwatch.ElapsedTicks;
                         if (currentTicks - lastReportTicks > reportIntervalTicks)
                         {
@@ -106,7 +99,6 @@ namespace LogRedactor
                         }
                     }
 
-                    // Flush all buffers
                     writer.Flush();
                     outStream.Flush();
                 }
@@ -121,7 +113,6 @@ namespace LogRedactor
                     summary.TotalRedactions = totalRedactions;
                     summary.Duration = stopwatch.Elapsed;
 
-                    // Final progress event at 100%
                     double totalSec = stopwatch.Elapsed.TotalSeconds;
                     double finalMbps = totalSec > 0 ? (totalBytes / (1024.0 * 1024.0)) / totalSec : 0;
                     

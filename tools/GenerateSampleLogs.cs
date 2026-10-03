@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace LogRedactor
+namespace LogRedactor.Tools
 {
     class GenerateSampleLogs
     {

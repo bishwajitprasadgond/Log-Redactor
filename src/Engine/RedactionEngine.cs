@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using LogRedactor.Models;
 
-namespace LogRedactor
+namespace LogRedactor.Engine
 {
     public sealed class RedactionEngine
     {
@@ -44,7 +45,7 @@ namespace LogRedactor
             @"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b",
             EngineRegexOptions);
 
-        // 6. MAC Address: Standard colon, hyphen, or cisco dotted notation (e.g. 00:1A:2B:3C:4D:5E or 00-1A-2B-3C-4D-5E or 001a.2b3c.4d5e)
+        // 6. MAC Address: Standard colon, hyphen, or cisco dotted notation
         private static readonly Regex MacAddressRegex = new Regex(
             @"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b|\b[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\b",
             EngineRegexOptions);
@@ -59,12 +60,12 @@ namespace LogRedactor
             @"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b|\b(?:[0-9a-fA-F]{1,4}:){1,7}:|\b:(?::[0-9a-fA-F]{1,4}){1,7}\b|\b(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}\b",
             EngineRegexOptions);
 
-        // 9. Hostnames & FQDNs / Domains (e.g., prod-db-01.internal.corp, api.service.com, hostname: srv-app01)
+        // 9. Hostnames & FQDNs / Domains
         private static readonly Regex DomainHostnameRegex = new Regex(
             @"(?i)(?:https?://)?\b([a-zA-Z0-9_\-]+(?:\.[a-zA-Z0-9_\-]+)*\.(?:com|org|net|edu|gov|io|internal|corp|local|lan|cloud|dev|int))\b|(?i)\b(?:host(?:name)?|server|node)\s*[:=]\s*['""]?([a-zA-Z0-9_\-\.]{3,64})['""]?",
             EngineRegexOptions);
 
-        // 10. Port numbers in network logs (e.g., :8080, port 443, port=8443, :3306, :5432)
+        // 10. Port numbers in network logs
         private static readonly Regex PortRegex = new Regex(
             @"(?i)(?::(?<port>\d{2,5})\b|(?:\bport\s*[:=]?\s*)(?<port>\d{2,5})\b)",
             EngineRegexOptions);
@@ -79,7 +80,7 @@ namespace LogRedactor
             @"\b[2-9]\d{3}[-\s]?\d{4}[-\s]?\d{4}\b",
             EngineRegexOptions);
 
-        // 13. Phone number pattern (domestic and international representations)
+        // 13. Phone number pattern
         private static readonly Regex PhoneRegex = new Regex(
             @"(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",
             EngineRegexOptions);
@@ -94,7 +95,6 @@ namespace LogRedactor
         {
             _activeRules.Clear();
 
-            // High specificity tokens first
             if (_options.MaskJwt)
             {
                 _activeRules.Add(new RedactionRule

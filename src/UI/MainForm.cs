@@ -5,8 +5,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LogRedactor.Engine;
+using LogRedactor.IO;
+using LogRedactor.Models;
 
-namespace LogRedactor
+namespace LogRedactor.UI
 {
     public class MainForm : Form
     {
