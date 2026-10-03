@@ -1,6 +1,6 @@
 # Enterprise Log Redactor
 
-Log Redactor is a high-performance Windows desktop utility engineered to sanitize sensitive data, credentials, personally identifiable information (PII), and network telemetry from enterprise log files.
+Log Redactor is a high-performance Windows desktop utility engineered to sanitize sensitive data, credentials, network telemetry, personally identifiable information (PII), and host identifiers from enterprise log files.
 
 The application operates as a standalone, zero-dependency executable (`LogRedactor.exe`). It runs on standard Windows installations without requiring external runtimes such as Python, Node.js, Electron, Java, or third-party dynamic libraries.
 
@@ -75,17 +75,26 @@ flowchart TD
     R4 -->|Match: Replace username component| R5[5. Scan Email Addresses]
     R4 -->|No match| R5
     
-    R5 -->|Match: Replace with EMAIL| R6[6. Scan IPv4 and IPv6 Addresses]
+    R5 -->|Match: Replace with EMAIL| R6[6. Scan MAC Network Addresses]
     R5 -->|No match| R6
-    
-    R6 -->|Match: Replace with IP_V4 or IP_V6| R7[7. Scan Cards and Aadhaar IDs]
+
+    R6 -->|Match: Replace with MAC_ADDR| R7[7. Scan IPv4 and IPv6 Addresses]
     R6 -->|No match| R7
     
-    R7 -->|Match: Replace with CARD_NUM or AADHAAR| R8[8. Scan Phone Numbers]
+    R7 -->|Match: Replace with IP_V4 or IP_V6| R8[8. Scan Domains and Hostnames]
     R7 -->|No match| R8
+
+    R8 -->|Match: Replace with HOST_DOMAIN| R9[9. Scan Network Port Numbers]
+    R8 -->|No match| R9
+
+    R9 -->|Match: Replace with PORT| R10[10. Scan Cards and Aadhaar IDs]
+    R9 -->|No match| R10
     
-    R8 -->|Match: Replace with PHONE| RedactedLine([Sanitized Output Line])
-    R8 -->|No match| RedactedLine
+    R10 -->|Match: Replace with CARD_NUM or AADHAAR| R11[11. Scan Phone Numbers]
+    R10 -->|No match| R11
+    
+    R11 -->|Match: Replace with PHONE| RedactedLine([Sanitized Output Line])
+    R11 -->|No match| RedactedLine
 ```
 
 ### 4. Asynchronous Task Execution and Throttled Telemetry Flow
@@ -147,8 +156,11 @@ The redaction engine executes a prioritized filter bank using compiled, culture-
 | **Sensitive URL Query Parameters** | Query parameters containing sensitive variables (`?token=...`, `&password=...`, `&session=...`) | `[REDACTED_URL_PARAM]` |
 | **Windows User Paths** | Sanitizes user account directories (`C:\Users\<user>\...`) while preserving application directory hierarchy | `C:\Users\[USERNAME]\...` |
 | **Email Addresses** | RFC-compliant email address structures | `[EMAIL]` |
+| **MAC Addresses** | Colon, hyphen, or dot-separated physical network hardware addresses (`00:1A:2B:3C:4D:5E`, `001a.2b3c.4d5e`) | `[MAC_ADDR]` |
 | **IPv4 Addresses** | Four-octet IPv4 addresses with 0–255 range validation boundaries | `[IP_V4]` |
 | **IPv6 Addresses** | Full and compressed hexadecimal IPv6 notation | `[IP_V6]` |
+| **Domains & Hostnames** | Enterprise FQDNs, internal domains (`.corp`, `.internal`, `.local`, `.lan`), and `host: ...` identifiers | `[HOST_DOMAIN]` |
+| **Port Numbers** | Explicit TCP/UDP port notation (`:8080`, `port 443`, `port=8443`) | `[PORT]` |
 | **Payment Cards / PAN** | 13-to-19 digit credit/debit card numbers with delimiter normalization | `[CARD_NUM]` |
 | **Aadhaar Numbers** | 12-digit Indian national identity numbers | `[AADHAAR]` |
 | **Phone Numbers** | Standard domestic and international telephone numbers | `[PHONE]` |
@@ -160,7 +172,7 @@ The redaction engine executes a prioritized filter bank using compiled, culture-
 The user interface is built on native Windows Forms, customized for enterprise ergonomics:
 * **Auto-Scaling Layout Architecture**: Dynamically computed control dimensions and layout anchoring prevent overlapping controls on all Windows display scaling modes (100%, 125%, 150%, 175%, 200%).
 * **Drag-and-Drop Zone**: Direct drag-and-drop ingestion of `.log`, `.txt`, `.csv`, `.out`, `.json` files.
-* **Selective Masking Bank**: Granular checkboxes to enable or disable individual pattern detectors.
+* **Network & PII Masking Bank**: Granular checkboxes to enable or disable individual pattern detectors across network addresses, ports, domains, hostnames, and credentials.
 * **Interactive Preview**: Scans and displays the first 50 lines with active masking rules applied before initiating full-file processing.
 * **Asynchronous Cancellation**: Thread-safe cancellation token integration that stops I/O operations cleanly upon request.
 
@@ -171,7 +183,7 @@ The user interface is built on native Windows Forms, customized for enterprise e
 ```
 LogRedactor/
 ├── LogRedactor.csproj          # .NET SDK project configuration
-├── Program.cs                  # Entry point, DPI awareness initialization
+├── Program.cs                  # Entry point
 ├── MainForm.cs                 # Windows Forms user interface implementation
 ├── RedactionEngine.cs          # Regular expression filter bank and rule evaluator
 ├── StreamingLogProcessor.cs    # Multi-GB buffered stream engine
@@ -210,4 +222,4 @@ csc /target:exe /out:GenerateSampleLogs.exe GenerateSampleLogs.cs
 GenerateSampleLogs.exe 35000
 ```
 
-This creates a realistic 7.15 MB test file (`enterprise_test_sample.log`) populated with varied enterprise log formats, database queries, access tokens, API calls, and network events.
+This creates a realistic test file (`enterprise_test_sample.log`) populated with network ports, MAC addresses, hostnames, FQDNs, access tokens, API calls, and PII events.

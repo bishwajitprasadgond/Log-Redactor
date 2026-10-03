@@ -21,8 +21,13 @@ namespace LogRedactor
         // Core Controls
         private TextBox txtInputFile;
         private TextBox txtOutputFile;
+
+        // Checkbox rules
         private CheckBox chkIPv4;
         private CheckBox chkIPv6;
+        private CheckBox chkMacAddress;
+        private CheckBox chkDomainHostname;
+        private CheckBox chkPortNumber;
         private CheckBox chkEmail;
         private CheckBox chkPhone;
         private CheckBox chkWindowsPath;
@@ -54,8 +59,8 @@ namespace LogRedactor
         private void InitializeComponent()
         {
             this.Text = "Log Redactor - Enterprise Streaming Redaction Utility";
-            this.ClientSize = new Size(1000, 800);
-            this.MinimumSize = new Size(920, 720);
+            this.ClientSize = new Size(1020, 860);
+            this.MinimumSize = new Size(940, 760);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = ColBg;
             this.ForeColor = ColTextPrimary;
@@ -221,12 +226,12 @@ namespace LogRedactor
             currentY += 46;
 
             // ==========================================
-            // 3. REDACTION RULES CARD
+            // 3. REDACTION RULES CARD (3 Rows x 4 Cols Grid)
             // ==========================================
             Panel pnlRulesCard = new Panel
             {
                 Location = new Point(margin, currentY),
-                Size = new Size(pnlBody.ClientSize.Width - (margin * 2), 140),
+                Size = new Size(pnlBody.ClientSize.Width - (margin * 2), 170),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 BackColor = ColCard
             };
@@ -240,11 +245,11 @@ namespace LogRedactor
 
             Label lblRulesHeader = new Label
             {
-                Text = "Active Redaction Rules",
+                Text = "Active Redaction Rules (Network, Credentials & PII)",
                 Font = new Font("Segoe UI Semibold", 9.25F, FontStyle.Bold),
                 ForeColor = ColTextPrimary,
                 Location = new Point(16, 10),
-                Size = new Size(300, 20),
+                Size = new Size(400, 20),
                 UseMnemonic = false
             };
             pnlRulesCard.Controls.Add(lblRulesHeader);
@@ -252,41 +257,53 @@ namespace LogRedactor
             TableLayoutPanel tlpRules = new TableLayoutPanel
             {
                 Location = new Point(16, 36),
-                Size = new Size(pnlRulesCard.Width - 32, 68),
+                Size = new Size(pnlRulesCard.Width - 32, 98),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 ColumnCount = 4,
-                RowCount = 2,
+                RowCount = 3,
                 BackColor = Color.Transparent
             };
             tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            tlpRules.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-            tlpRules.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+            tlpRules.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            tlpRules.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            tlpRules.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
 
+            // Row 1: Network & Addressing
             chkIPv4 = new CheckBox { Text = "IPv4 Addresses", Checked = true, AutoSize = true, UseMnemonic = false };
             chkIPv6 = new CheckBox { Text = "IPv6 Addresses", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkMacAddress = new CheckBox { Text = "MAC Addresses", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkPortNumber = new CheckBox { Text = "Port Numbers", Checked = true, AutoSize = true, UseMnemonic = false };
+
+            // Row 2: Identity & Hostnames
+            chkDomainHostname = new CheckBox { Text = "Domains / Hosts", Checked = true, AutoSize = true, UseMnemonic = false };
             chkEmail = new CheckBox { Text = "Email Addresses", Checked = true, AutoSize = true, UseMnemonic = false };
             chkPhone = new CheckBox { Text = "Phone Numbers", Checked = true, AutoSize = true, UseMnemonic = false };
-
             chkWindowsPath = new CheckBox { Text = "Windows Paths", Checked = true, AutoSize = true, UseMnemonic = false };
+
+            // Row 3: Credentials & PII
             chkJwt = new CheckBox { Text = "JWT Tokens", Checked = true, AutoSize = true, UseMnemonic = false };
             chkApiToken = new CheckBox { Text = "API Keys / Tokens", Checked = true, AutoSize = true, UseMnemonic = false };
             chkCreditCard = new CheckBox { Text = "Credit Card / PAN", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkAadhaar = new CheckBox { Text = "Aadhaar IDs", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkUrlSensitive = new CheckBox { Text = "URL Query Secrets", Checked = true, AutoSize = true, UseMnemonic = false, Visible = false };
 
             tlpRules.Controls.Add(chkIPv4, 0, 0);
             tlpRules.Controls.Add(chkIPv6, 1, 0);
-            tlpRules.Controls.Add(chkEmail, 2, 0);
-            tlpRules.Controls.Add(chkPhone, 3, 0);
+            tlpRules.Controls.Add(chkMacAddress, 2, 0);
+            tlpRules.Controls.Add(chkPortNumber, 3, 0);
 
-            tlpRules.Controls.Add(chkWindowsPath, 0, 1);
-            tlpRules.Controls.Add(chkJwt, 1, 1);
-            tlpRules.Controls.Add(chkApiToken, 2, 1);
-            tlpRules.Controls.Add(chkCreditCard, 3, 1);
+            tlpRules.Controls.Add(chkDomainHostname, 0, 1);
+            tlpRules.Controls.Add(chkEmail, 1, 1);
+            tlpRules.Controls.Add(chkPhone, 2, 1);
+            tlpRules.Controls.Add(chkWindowsPath, 3, 1);
 
-            chkAadhaar = new CheckBox { Text = "Aadhaar IDs", Checked = true, AutoSize = true, UseMnemonic = false, Visible = false };
-            chkUrlSensitive = new CheckBox { Text = "URL Query Secrets", Checked = true, AutoSize = true, UseMnemonic = false, Visible = false };
+            tlpRules.Controls.Add(chkJwt, 0, 2);
+            tlpRules.Controls.Add(chkApiToken, 1, 2);
+            tlpRules.Controls.Add(chkCreditCard, 2, 2);
+            tlpRules.Controls.Add(chkAadhaar, 3, 2);
 
             pnlRulesCard.Controls.Add(tlpRules);
 
@@ -295,7 +312,7 @@ namespace LogRedactor
                 Text = "Select All",
                 Font = new Font("Segoe UI", 8.5F),
                 LinkColor = ColPrimary,
-                Location = new Point(16, 112),
+                Location = new Point(16, 142),
                 Size = new Size(60, 20),
                 UseMnemonic = false
             };
@@ -306,7 +323,7 @@ namespace LogRedactor
                 Text = "Clear All",
                 Font = new Font("Segoe UI", 8.5F),
                 LinkColor = ColTextSecondary,
-                Location = new Point(86, 112),
+                Location = new Point(86, 142),
                 Size = new Size(60, 20),
                 UseMnemonic = false
             };
@@ -316,7 +333,7 @@ namespace LogRedactor
             pnlRulesCard.Controls.Add(lnkClearAll);
             pnlBody.Controls.Add(pnlRulesCard);
 
-            currentY += 156;
+            currentY += 186;
 
             // ==========================================
             // 4. ACTION BUTTONS ROW
@@ -457,14 +474,17 @@ namespace LogRedactor
         {
             chkIPv4.Checked = state;
             chkIPv6.Checked = state;
+            chkMacAddress.Checked = state;
+            chkPortNumber.Checked = state;
+            chkDomainHostname.Checked = state;
             chkEmail.Checked = state;
             chkPhone.Checked = state;
-            chkCreditCard.Checked = state;
-            chkAadhaar.Checked = state;
+            chkWindowsPath.Checked = state;
             chkJwt.Checked = state;
             chkApiToken.Checked = state;
+            chkCreditCard.Checked = state;
+            chkAadhaar.Checked = state;
             chkUrlSensitive.Checked = state;
-            chkWindowsPath.Checked = state;
         }
 
         private void DropZone_DragEnter(object sender, DragEventArgs e)
@@ -535,6 +555,9 @@ namespace LogRedactor
             var opts = new RedactionRuleOptions();
             opts.MaskIPv4 = chkIPv4.Checked;
             opts.MaskIPv6 = chkIPv6.Checked;
+            opts.MaskMacAddress = chkMacAddress.Checked;
+            opts.MaskPortNumber = chkPortNumber.Checked;
+            opts.MaskDomainHostname = chkDomainHostname.Checked;
             opts.MaskEmail = chkEmail.Checked;
             opts.MaskPhone = chkPhone.Checked;
             opts.MaskCreditCard = chkCreditCard.Checked;

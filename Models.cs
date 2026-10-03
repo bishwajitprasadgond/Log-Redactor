@@ -8,14 +8,17 @@ namespace LogRedactor
         None = 0,
         IPv4 = 1 << 0,
         IPv6 = 1 << 1,
-        Email = 1 << 2,
-        Phone = 1 << 3,
-        CreditCard = 1 << 4,
-        Aadhaar = 1 << 5,
-        JWT = 1 << 6,
-        ApiToken = 1 << 7,
-        UrlQuerySensitive = 1 << 8,
-        WindowsPathUser = 1 << 9,
+        MacAddress = 1 << 2,
+        DomainHostname = 1 << 3,
+        PortNumber = 1 << 4,
+        Email = 1 << 5,
+        Phone = 1 << 6,
+        CreditCard = 1 << 7,
+        Aadhaar = 1 << 8,
+        JWT = 1 << 9,
+        ApiToken = 1 << 10,
+        UrlQuerySensitive = 1 << 11,
+        WindowsPathUser = 1 << 12,
         All = ~0
     }
 
@@ -23,6 +26,9 @@ namespace LogRedactor
     {
         public bool MaskIPv4 { get; set; }
         public bool MaskIPv6 { get; set; }
+        public bool MaskMacAddress { get; set; }
+        public bool MaskDomainHostname { get; set; }
+        public bool MaskPortNumber { get; set; }
         public bool MaskEmail { get; set; }
         public bool MaskPhone { get; set; }
         public bool MaskCreditCard { get; set; }
@@ -35,6 +41,9 @@ namespace LogRedactor
         // Custom tags format configuration
         public string TagIPv4 { get; set; }
         public string TagIPv6 { get; set; }
+        public string TagMacAddress { get; set; }
+        public string TagDomainHostname { get; set; }
+        public string TagPortNumber { get; set; }
         public string TagEmail { get; set; }
         public string TagPhone { get; set; }
         public string TagCreditCard { get; set; }
@@ -48,6 +57,9 @@ namespace LogRedactor
         {
             MaskIPv4 = true;
             MaskIPv6 = true;
+            MaskMacAddress = true;
+            MaskDomainHostname = true;
+            MaskPortNumber = true;
             MaskEmail = true;
             MaskPhone = true;
             MaskCreditCard = true;
@@ -59,6 +71,9 @@ namespace LogRedactor
 
             TagIPv4 = "[IP_V4]";
             TagIPv6 = "[IP_V6]";
+            TagMacAddress = "[MAC_ADDR]";
+            TagDomainHostname = "[HOST_DOMAIN]";
+            TagPortNumber = "[PORT]";
             TagEmail = "[EMAIL]";
             TagPhone = "[PHONE]";
             TagCreditCard = "[CARD_NUM]";
