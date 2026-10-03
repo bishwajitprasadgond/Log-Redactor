@@ -14,9 +14,9 @@ The application operates as a standalone, zero-dependency executable (`LogRedact
 graph TD
     subgraph UI_Layer [Presentation Layer - Windows Forms]
         MainForm[MainForm.cs]
-        DropZone[Drag & Drop Ingestion]
+        DropZone[Drag and Drop Ingestion]
         OptionsCard[Rule Selection Checkboxes]
-        ProgressTelemetry[Progress & Throughput Reporter]
+        ProgressTelemetry[Progress and Throughput Reporter]
         PreviewConsole[50-Line Preview Console]
     end
 
@@ -24,7 +24,7 @@ graph TD
         Processor[StreamingLogProcessor.cs]
         Engine[RedactionEngine.cs]
         RulesBank[Compiled Regex Filter Bank]
-        Models[Models.cs - Telemetry & DTOs]
+        Models[Models.cs - Telemetry and DTOs]
     end
 
     subgraph IO_Layer [Buffered Streaming I/O]
@@ -36,64 +36,56 @@ graph TD
 
     DropZone --> MainForm
     OptionsCard --> MainForm
-    MainForm -->|Start Async Task| Processor
+    MainForm --> Processor
     Processor --> InStream
     InStream --> Reader
-    Reader -->|Line Stream| Engine
+    Reader --> Engine
     Engine --> RulesBank
-    Engine -->|Sanitized Line| Writer
+    Engine --> Writer
     Writer --> OutStream
-    Processor -.->|Throttled Telemetry| ProgressTelemetry
+    Processor -.-> ProgressTelemetry
 ```
 
 ### 2. Multi-Gigabyte Constant Memory Streaming Pipeline
 
 ```mermaid
 flowchart LR
-    DiskIn[("Input File (GBs)\n[Disk]")] -->|64 KB Block| FSIn["FileStream\n(SequentialScan)"]
-    FSIn -->|Line Cursor| SR["StreamReader\n(Forward Only)"]
-    SR -->|Raw Line String| RE["Redaction Engine\n(Regex Filter Bank)"]
-    RE -->|Redacted Line String| SW["StreamWriter\n(Direct Flush)"]
-    SW -->|64 KB Block| FSOut["FileStream\n(Disk Write)"]
-    FSOut --> DiskOut[("Redacted File\n[Disk]")]
-
-    subgraph Memory_Bound [Bounded Working Set: ~4.5 MB - 8 MB RAM]
-        FSIn
-        SR
-        RE
-        SW
-        FSOut
-    end
+    DiskIn[Input File on Disk] --> FSIn[FileStream SequentialScan 64KB]
+    FSIn --> SR[StreamReader Forward Cursor]
+    SR --> RE[Redaction Engine Regex Filter]
+    RE --> SW[StreamWriter Direct Flush]
+    SW --> FSOut[FileStream Disk Write 64KB]
+    FSOut --> DiskOut[Sanitized Output on Disk]
 ```
 
 ### 3. Masking Rule Execution Order and Priority Filter Bank
 
 ```mermaid
 flowchart TD
-    RawLine([Raw Input Line]) --> R1{JWT Tokens\n eyJ...}
-    R1 -->|Match / Replace [JWT_TOKEN]| R2{API Keys & Bearers\n AKIA, ghp, xoxb, secret}
-    R1 -->|Next| R2
+    RawLine([Raw Input Line]) --> R1[1. Scan JWT Tokens]
+    R1 -->|Match: Replace with JWT_TOKEN| R2[2. Scan API Keys and Bearer Tokens]
+    R1 -->|No match| R2
     
-    R2 -->|Match / Replace [API_KEY]| R3{URL Query Secrets\n ?token=..., &apikey=...}
-    R2 -->|Next| R3
+    R2 -->|Match: Replace with API_KEY| R3[3. Scan URL Query Secrets]
+    R2 -->|No match| R3
     
-    R3 -->|Match / Replace [REDACTED_URL_PARAM]| R4{Windows User Paths\n C:\\Users\\user\\...}
-    R3 -->|Next| R4
+    R3 -->|Match: Replace parameter value| R4[4. Scan Windows User Paths]
+    R3 -->|No match| R4
     
-    R4 -->|Match / Replace C:\\Users\\[USERNAME]\\]| R5{Email Addresses\n RFC Standard}
-    R4 -->|Next| R5
+    R4 -->|Match: Replace username component| R5[5. Scan Email Addresses]
+    R4 -->|No match| R5
     
-    R5 -->|Match / Replace [EMAIL]| R6{IPv4 / IPv6 Addresses\n Octet Boundary Checked}
-    R5 -->|Next| R6
+    R5 -->|Match: Replace with EMAIL| R6[6. Scan IPv4 and IPv6 Addresses]
+    R5 -->|No match| R6
     
-    R6 -->|Match / Replace [IP_V4] / [IP_V6]| R7{Credit Cards & Aadhaar\n 13-19 Digit / 12-Digit IDs}
-    R6 -->|Next| R7
+    R6 -->|Match: Replace with IP_V4 or IP_V6| R7[7. Scan Cards and Aadhaar IDs]
+    R6 -->|No match| R7
     
-    R7 -->|Match / Replace [CARD_NUM] / [AADHAAR]| R8{Phone Numbers\n Domestic & Intl}
-    R7 -->|Next| R8
+    R7 -->|Match: Replace with CARD_NUM or AADHAAR| R8[8. Scan Phone Numbers]
+    R7 -->|No match| R8
     
-    R8 -->|Match / Replace [PHONE]| RedactedLine([Sanitized Output Line])
-    R8 -->|Next| RedactedLine
+    R8 -->|Match: Replace with PHONE| RedactedLine([Sanitized Output Line])
+    R8 -->|No match| RedactedLine
 ```
 
 ### 4. Asynchronous Task Execution and Throttled Telemetry Flow
@@ -102,13 +94,13 @@ flowchart TD
 sequenceDiagram
     autonumber
     actor User as Operator
-    participant UI as MainForm (UI Thread)
-    participant Worker as Background Task (Worker Thread)
+    participant UI as MainForm UI Thread
+    participant Worker as Background Worker Task
     participant Stream as StreamingLogProcessor
     participant Redactor as RedactionEngine
     participant Disk as Disk Storage
 
-    User->>UI: Drop log file & Click "Redact Log"
+    User->>UI: Select log file and click Redact Log
     UI->>Worker: Task.Factory.StartNew(ProcessFile)
     Worker->>Stream: Initialize FileStreams (64KB buffer)
     
@@ -119,15 +111,15 @@ sequenceDiagram
         Stream->>Disk: WriteLine(sanitizedLine)
         
         opt Stopwatch interval >= 100ms
-            Stream-->>UI: BeginInvoke(ProgressChanged: % complete, MB/s, lines)
-            UI->>UI: Update progress bar & throughput stats
+            Stream-->>UI: BeginInvoke(ProgressChanged)
+            UI->>UI: Update progress bar and throughput stats
         end
     end
 
-    Stream->>Disk: Flush() & Close()
+    Stream->>Disk: Flush() and Close()
     Stream-->>Worker: ProcessingSummary
-    Worker-->>UI: InvokeCompletion(Success / Summary dialog)
-    UI->>User: Display processing summary and completion notice
+    Worker-->>UI: Invoke completion handler
+    UI->>User: Display processing summary dialog
 ```
 
 ---
@@ -166,7 +158,7 @@ The redaction engine executes a prioritized filter bank using compiled, culture-
 ## User Interface Design
 
 The user interface is built on native Windows Forms, customized for enterprise ergonomics:
-* **Per-Monitor High-DPI Awareness**: Clean, crisp typography without Windows scaling blur.
+* **Auto-Scaling Layout Architecture**: Dynamically computed control dimensions and layout anchoring prevent overlapping controls on all Windows display scaling modes (100%, 125%, 150%, 175%, 200%).
 * **Drag-and-Drop Zone**: Direct drag-and-drop ingestion of `.log`, `.txt`, `.csv`, `.out`, `.json` files.
 * **Selective Masking Bank**: Granular checkboxes to enable or disable individual pattern detectors.
 * **Interactive Preview**: Scans and displays the first 50 lines with active masking rules applied before initiating full-file processing.

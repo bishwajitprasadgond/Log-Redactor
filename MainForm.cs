@@ -10,39 +10,17 @@ namespace LogRedactor
 {
     public class MainForm : Form
     {
-        // Palette
-        private readonly Color ColBg = Color.FromArgb(245, 247, 250);
+        // Colors
+        private readonly Color ColBg = Color.FromArgb(246, 248, 251);
         private readonly Color ColCard = Color.FromArgb(255, 255, 255);
-        private readonly Color ColBorder = Color.FromArgb(218, 224, 233);
-        private readonly Color ColTextPrimary = Color.FromArgb(26, 32, 44);
+        private readonly Color ColBorder = Color.FromArgb(218, 225, 235);
+        private readonly Color ColTextPrimary = Color.FromArgb(24, 30, 42);
         private readonly Color ColTextSecondary = Color.FromArgb(100, 116, 139);
-        private readonly Color ColPrimary = Color.FromArgb(15, 76, 129);
-        private readonly Color ColPrimaryHover = Color.FromArgb(24, 95, 158);
-        private readonly Color ColAccent = Color.FromArgb(16, 149, 106);
-        private readonly Color ColDanger = Color.FromArgb(220, 38, 38);
+        private readonly Color ColPrimary = Color.FromArgb(16, 85, 154);
 
-        // Header controls
-        private Panel pnlHeader;
-        private Label lblTitle;
-        private Label lblSubtitle;
-
-        // Drop zone
-        private Panel pnlDropZone;
-        private Label lblDropMain;
-        private Label lblDropSub;
-        private Button btnBrowseInput;
-
-        // Path inputs
-        private Label lblInput;
+        // Core Controls
         private TextBox txtInputFile;
-        private Button btnChooseInput;
-        private Label lblOutput;
         private TextBox txtOutputFile;
-        private Button btnChooseOutput;
-
-        // Redaction rules card
-        private Panel pnlRulesCard;
-        private Label lblRulesHeader;
         private CheckBox chkIPv4;
         private CheckBox chkIPv6;
         private CheckBox chkEmail;
@@ -53,22 +31,14 @@ namespace LogRedactor
         private CheckBox chkCreditCard;
         private CheckBox chkAadhaar;
         private CheckBox chkUrlSensitive;
-        private LinkLabel lnkSelectAll;
-        private LinkLabel lnkClearAll;
 
-        // Action controls
         private Button btnExecute;
         private Button btnCancel;
         private Button btnPreview;
 
-        // Progress controls
         private ProgressBar prgProgress;
         private Label lblStatus;
         private Label lblMetrics;
-
-        // Log / Preview card
-        private Panel pnlConsoleCard;
-        private Label lblConsoleHeader;
         private TextBox txtConsole;
 
         private CancellationTokenSource _cts;
@@ -76,27 +46,28 @@ namespace LogRedactor
 
         public MainForm()
         {
+            this.Font = new Font("Segoe UI", 9.0F, FontStyle.Regular, GraphicsUnit.Point);
+            this.AutoScaleMode = AutoScaleMode.Font;
             InitializeComponent();
         }
 
         private void InitializeComponent()
         {
             this.Text = "Log Redactor - Enterprise Streaming Redaction Utility";
-            this.Size = new Size(860, 800);
-            this.MinimumSize = new Size(820, 750);
+            this.ClientSize = new Size(960, 840);
+            this.MinimumSize = new Size(880, 780);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Font = new Font("Segoe UI", 9.0F, FontStyle.Regular, GraphicsUnit.Point);
             this.BackColor = ColBg;
             this.ForeColor = ColTextPrimary;
-            this.DoubleBuffered = true;
 
-            // 1. Header Panel
-            pnlHeader = new Panel
+            // ==========================================
+            // 1. TOP HEADER PANEL (Dock = Top)
+            // ==========================================
+            Panel pnlHeader = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 65,
-                BackColor = ColCard,
-                Padding = new Padding(24, 12, 24, 10)
+                Height = 68,
+                BackColor = ColCard
             };
             pnlHeader.Paint += delegate(object s, PaintEventArgs e)
             {
@@ -106,44 +77,50 @@ namespace LogRedactor
                 }
             };
 
-            lblTitle = new Label
+            Label lblTitle = new Label
             {
                 Text = "Log Redactor",
                 Font = new Font("Segoe UI", 13.0F, FontStyle.Bold),
                 ForeColor = ColTextPrimary,
-                Location = new Point(24, 10),
-                AutoSize = true
+                Location = new Point(24, 12),
+                AutoSize = true,
+                UseMnemonic = false
             };
 
-            lblSubtitle = new Label
+            Label lblSubtitle = new Label
             {
-                Text = "Deterministic, streaming PII and credential sanitization for enterprise log files",
-                Font = new Font("Segoe UI", 8.75F, FontStyle.Regular),
+                Text = "Deterministic, streaming PII and credential sanitization for enterprise logs",
+                Font = new Font("Segoe UI", 9.0F, FontStyle.Regular),
                 ForeColor = ColTextSecondary,
-                Location = new Point(25, 36),
-                AutoSize = true
+                Location = new Point(25, 38),
+                AutoSize = true,
+                UseMnemonic = false
             };
 
             pnlHeader.Controls.Add(lblTitle);
             pnlHeader.Controls.Add(lblSubtitle);
             this.Controls.Add(pnlHeader);
 
-            // Container Panel with scrolling
+            // ==========================================
+            // 2. MAIN SCROLLABLE/FLOW CONTAINER (Dock = Fill)
+            // ==========================================
             Panel pnlBody = new Panel
             {
                 Dock = DockStyle.Fill,
-                AutoScroll = true,
-                Padding = new Padding(24, 16, 24, 20)
+                BackColor = ColBg,
+                Padding = new Padding(24, 16, 24, 16)
             };
             this.Controls.Add(pnlBody);
 
-            int y = 14;
+            int currentY = 16;
 
-            // 2. Drop Zone Card
-            pnlDropZone = new Panel
+            // ==========================================
+            // 3. DROP ZONE
+            // ==========================================
+            Panel pnlDropZone = new Panel
             {
-                Location = new Point(24, y),
-                Size = new Size(794, 100),
+                Location = new Point(24, currentY),
+                Size = new Size(pnlBody.ClientSize.Width - 48, 86),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 BackColor = ColCard,
                 AllowDrop = true
@@ -151,7 +128,7 @@ namespace LogRedactor
             pnlDropZone.Paint += delegate(object s, PaintEventArgs e)
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                using (var pen = new Pen(Color.FromArgb(180, 198, 220), 1.5f))
+                using (var pen = new Pen(Color.FromArgb(160, 185, 215), 1.5f))
                 {
                     pen.DashStyle = DashStyle.Dash;
                     e.Graphics.DrawRectangle(pen, 1, 1, pnlDropZone.Width - 3, pnlDropZone.Height - 3);
@@ -160,14 +137,14 @@ namespace LogRedactor
             pnlDropZone.DragEnter += DropZone_DragEnter;
             pnlDropZone.DragDrop += DropZone_DragDrop;
 
-            lblDropMain = new Label
+            Label lblDropMain = new Label
             {
-                Text = "Drag and drop a log file here, or click Browse to select",
-                Font = new Font("Segoe UI Semibold", 10.0F, FontStyle.Bold),
+                Text = "Drag & Drop Log File Here (.log, .txt, .out, .csv, .json)",
+                Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold),
                 ForeColor = ColTextPrimary,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(0, 16),
-                Size = new Size(794, 24),
+                Location = new Point(0, 10),
+                Size = new Size(pnlDropZone.Width, 20),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 UseMnemonic = false,
                 AllowDrop = true
@@ -175,14 +152,14 @@ namespace LogRedactor
             lblDropMain.DragEnter += DropZone_DragEnter;
             lblDropMain.DragDrop += DropZone_DragDrop;
 
-            lblDropSub = new Label
+            Label lblDropSub = new Label
             {
-                Text = "Supports .log, .txt, .csv, .out, .json files. Multi-gigabyte files are processed in constant memory.",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
+                Text = "Supports multi-gigabyte files processed in constant ~5 MB memory",
+                Font = new Font("Segoe UI", 8.25F, FontStyle.Regular),
                 ForeColor = ColTextSecondary,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(0, 40),
-                Size = new Size(794, 20),
+                Location = new Point(0, 31),
+                Size = new Size(pnlDropZone.Width, 18),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 UseMnemonic = false,
                 AllowDrop = true
@@ -190,15 +167,14 @@ namespace LogRedactor
             lblDropSub.DragEnter += DropZone_DragEnter;
             lblDropSub.DragDrop += DropZone_DragDrop;
 
-            btnBrowseInput = new Button
+            Button btnBrowseInput = new Button
             {
                 Text = "Browse...",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
-                Size = new Size(100, 26),
-                Location = new Point((pnlDropZone.Width - 100) / 2, 64),
+                Font = new Font("Segoe UI", 8.5F),
+                Size = new Size(90, 26),
+                Location = new Point((pnlDropZone.Width - 90) / 2, 52),
                 Anchor = AnchorStyles.Top,
-                BackColor = Color.FromArgb(240, 243, 246),
-                ForeColor = ColTextPrimary,
+                BackColor = Color.FromArgb(245, 247, 250),
                 FlatStyle = FlatStyle.System,
                 Cursor = Cursors.Hand
             };
@@ -209,35 +185,38 @@ namespace LogRedactor
             pnlDropZone.Controls.Add(btnBrowseInput);
             pnlBody.Controls.Add(pnlDropZone);
 
-            y += 114;
+            currentY += 98;
 
-            // 3. File Inputs Section
-            lblInput = new Label
+            // ==========================================
+            // 4. FILE PATH INPUTS
+            // ==========================================
+            Label lblInput = new Label
             {
                 Text = "Input File:",
-                Font = new Font("Segoe UI Semibold", 8.75F, FontStyle.Bold),
+                Font = new Font("Segoe UI Semibold", 9.0F, FontStyle.Bold),
                 ForeColor = ColTextPrimary,
-                Location = new Point(24, y + 4),
-                Size = new Size(80, 20),
+                Location = new Point(24, currentY + 3),
+                Size = new Size(80, 22),
                 UseMnemonic = false
             };
             txtInputFile = new TextBox
             {
                 Font = new Font("Segoe UI", 9.0F),
-                Location = new Point(106, y + 1),
-                Size = new Size(642, 23),
+                Location = new Point(108, currentY),
+                Size = new Size(pnlBody.ClientSize.Width - 48 - 188, 23),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             txtInputFile.TextChanged += delegate(object s, EventArgs e) { AutoGenerateOutputPath(); };
 
-            btnChooseInput = new Button
+            Button btnChooseInput = new Button
             {
-                Text = "Select...",
+                Text = "Browse...",
                 Font = new Font("Segoe UI", 8.5F),
-                Location = new Point(756, y),
-                Size = new Size(62, 26),
+                Location = new Point(pnlBody.ClientSize.Width - 24 - 76, currentY - 1),
+                Size = new Size(76, 26),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                FlatStyle = FlatStyle.System
+                FlatStyle = FlatStyle.System,
+                Cursor = Cursors.Hand
             };
             btnChooseInput.Click += delegate(object s, EventArgs e) { BrowseInputFile(); };
 
@@ -245,32 +224,33 @@ namespace LogRedactor
             pnlBody.Controls.Add(txtInputFile);
             pnlBody.Controls.Add(btnChooseInput);
 
-            y += 34;
+            currentY += 34;
 
-            lblOutput = new Label
+            Label lblOutput = new Label
             {
                 Text = "Output File:",
-                Font = new Font("Segoe UI Semibold", 8.75F, FontStyle.Bold),
+                Font = new Font("Segoe UI Semibold", 9.0F, FontStyle.Bold),
                 ForeColor = ColTextPrimary,
-                Location = new Point(24, y + 4),
-                Size = new Size(80, 20),
+                Location = new Point(24, currentY + 3),
+                Size = new Size(80, 22),
                 UseMnemonic = false
             };
             txtOutputFile = new TextBox
             {
                 Font = new Font("Segoe UI", 9.0F),
-                Location = new Point(106, y + 1),
-                Size = new Size(642, 23),
+                Location = new Point(108, currentY),
+                Size = new Size(pnlBody.ClientSize.Width - 48 - 188, 23),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
-            btnChooseOutput = new Button
+            Button btnChooseOutput = new Button
             {
-                Text = "Select...",
+                Text = "Browse...",
                 Font = new Font("Segoe UI", 8.5F),
-                Location = new Point(756, y),
-                Size = new Size(62, 26),
+                Location = new Point(pnlBody.ClientSize.Width - 24 - 76, currentY - 1),
+                Size = new Size(76, 26),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                FlatStyle = FlatStyle.System
+                FlatStyle = FlatStyle.System,
+                Cursor = Cursors.Hand
             };
             btnChooseOutput.Click += delegate(object s, EventArgs e) { BrowseOutputFile(); };
 
@@ -278,13 +258,15 @@ namespace LogRedactor
             pnlBody.Controls.Add(txtOutputFile);
             pnlBody.Controls.Add(btnChooseOutput);
 
-            y += 42;
+            currentY += 40;
 
-            // 4. Redaction Rules Panel
-            pnlRulesCard = new Panel
+            // ==========================================
+            // 5. REDACTION RULES CARD
+            // ==========================================
+            Panel pnlRulesCard = new Panel
             {
-                Location = new Point(24, y),
-                Size = new Size(794, 125),
+                Location = new Point(24, currentY),
+                Size = new Size(pnlBody.ClientSize.Width - 48, 126),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 BackColor = ColCard
             };
@@ -296,82 +278,93 @@ namespace LogRedactor
                 }
             };
 
-            lblRulesHeader = new Label
+            Label lblRulesHeader = new Label
             {
                 Text = "Active Redaction Rules",
-                Font = new Font("Segoe UI Semibold", 9.25F, FontStyle.Bold),
+                Font = new Font("Segoe UI Semibold", 9.0F, FontStyle.Bold),
                 ForeColor = ColTextPrimary,
-                Location = new Point(14, 10),
+                Location = new Point(16, 8),
                 AutoSize = true,
                 UseMnemonic = false
             };
+            pnlRulesCard.Controls.Add(lblRulesHeader);
 
-            // Two-row tidy grid with generous spacing
-            int col1 = 16;
-            int col2 = 175;
-            int col3 = 330;
-            int col4 = 490;
-            int col5 = 650;
+            TableLayoutPanel tlpRules = new TableLayoutPanel
+            {
+                Location = new Point(16, 32),
+                Size = new Size(pnlRulesCard.Width - 32, 60),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+                ColumnCount = 4,
+                RowCount = 2,
+                BackColor = Color.Transparent
+            };
+            tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpRules.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            tlpRules.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            tlpRules.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
 
-            int row1 = 38;
-            int row2 = 68;
+            chkIPv4 = new CheckBox { Text = "IPv4 Addresses", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkIPv6 = new CheckBox { Text = "IPv6 Addresses", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkEmail = new CheckBox { Text = "Email Addresses", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkPhone = new CheckBox { Text = "Phone Numbers", Checked = true, AutoSize = true, UseMnemonic = false };
 
-            chkIPv4 = new CheckBox { Text = "IPv4 Addresses", Checked = true, Location = new Point(col1, row1), AutoSize = true, UseMnemonic = false };
-            chkIPv6 = new CheckBox { Text = "IPv6 Addresses", Checked = true, Location = new Point(col2, row1), AutoSize = true, UseMnemonic = false };
-            chkEmail = new CheckBox { Text = "Email Addresses", Checked = true, Location = new Point(col3, row1), AutoSize = true, UseMnemonic = false };
-            chkPhone = new CheckBox { Text = "Phone Numbers", Checked = true, Location = new Point(col4, row1), AutoSize = true, UseMnemonic = false };
-            chkWindowsPath = new CheckBox { Text = "Windows Paths", Checked = true, Location = new Point(col5, row1), AutoSize = true, UseMnemonic = false };
+            chkWindowsPath = new CheckBox { Text = "Windows Paths", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkJwt = new CheckBox { Text = "JWT Tokens", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkApiToken = new CheckBox { Text = "API Keys / Tokens", Checked = true, AutoSize = true, UseMnemonic = false };
+            chkCreditCard = new CheckBox { Text = "Credit Card / PAN", Checked = true, AutoSize = true, UseMnemonic = false };
 
-            chkJwt = new CheckBox { Text = "JWT Tokens", Checked = true, Location = new Point(col1, row2), AutoSize = true, UseMnemonic = false };
-            chkApiToken = new CheckBox { Text = "API Keys / Tokens", Checked = true, Location = new Point(col2, row2), AutoSize = true, UseMnemonic = false };
-            chkCreditCard = new CheckBox { Text = "Credit Card / PAN", Checked = true, Location = new Point(col3, row2), AutoSize = true, UseMnemonic = false };
-            chkAadhaar = new CheckBox { Text = "Aadhaar Numbers", Checked = true, Location = new Point(col4, row2), AutoSize = true, UseMnemonic = false };
-            chkUrlSensitive = new CheckBox { Text = "URL Query Secrets", Checked = true, Location = new Point(col5, row2), AutoSize = true, UseMnemonic = false };
+            tlpRules.Controls.Add(chkIPv4, 0, 0);
+            tlpRules.Controls.Add(chkIPv6, 1, 0);
+            tlpRules.Controls.Add(chkEmail, 2, 0);
+            tlpRules.Controls.Add(chkPhone, 3, 0);
 
-            lnkSelectAll = new LinkLabel
+            tlpRules.Controls.Add(chkWindowsPath, 0, 1);
+            tlpRules.Controls.Add(chkJwt, 1, 1);
+            tlpRules.Controls.Add(chkApiToken, 2, 1);
+            tlpRules.Controls.Add(chkCreditCard, 3, 1);
+
+            chkAadhaar = new CheckBox { Text = "Aadhaar IDs", Checked = true, AutoSize = true, UseMnemonic = false, Visible = false };
+            chkUrlSensitive = new CheckBox { Text = "URL Query Secrets", Checked = true, AutoSize = true, UseMnemonic = false, Visible = false };
+
+            pnlRulesCard.Controls.Add(tlpRules);
+
+            LinkLabel lnkSelectAll = new LinkLabel
             {
                 Text = "Select All",
                 Font = new Font("Segoe UI", 8.25F),
                 LinkColor = ColPrimary,
-                Location = new Point(16, 98),
+                Location = new Point(16, 100),
                 AutoSize = true
             };
             lnkSelectAll.LinkClicked += delegate(object s, LinkLabelLinkClickedEventArgs e) { SetAllOptions(true); };
 
-            lnkClearAll = new LinkLabel
+            LinkLabel lnkClearAll = new LinkLabel
             {
                 Text = "Clear All",
                 Font = new Font("Segoe UI", 8.25F),
                 LinkColor = ColTextSecondary,
-                Location = new Point(80, 98),
+                Location = new Point(84, 100),
                 AutoSize = true
             };
             lnkClearAll.LinkClicked += delegate(object s, LinkLabelLinkClickedEventArgs e) { SetAllOptions(false); };
 
-            pnlRulesCard.Controls.Add(lblRulesHeader);
-            pnlRulesCard.Controls.Add(chkIPv4);
-            pnlRulesCard.Controls.Add(chkIPv6);
-            pnlRulesCard.Controls.Add(chkEmail);
-            pnlRulesCard.Controls.Add(chkPhone);
-            pnlRulesCard.Controls.Add(chkWindowsPath);
-            pnlRulesCard.Controls.Add(chkJwt);
-            pnlRulesCard.Controls.Add(chkApiToken);
-            pnlRulesCard.Controls.Add(chkCreditCard);
-            pnlRulesCard.Controls.Add(chkAadhaar);
-            pnlRulesCard.Controls.Add(chkUrlSensitive);
             pnlRulesCard.Controls.Add(lnkSelectAll);
             pnlRulesCard.Controls.Add(lnkClearAll);
             pnlBody.Controls.Add(pnlRulesCard);
 
-            y += 138;
+            currentY += 138;
 
-            // 5. Action Buttons Row
+            // ==========================================
+            // 6. ACTION BUTTONS ROW
+            // ==========================================
             btnExecute = new Button
             {
                 Text = "Redact Log",
                 Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold),
-                Location = new Point(24, y),
-                Size = new Size(140, 36),
+                Location = new Point(24, currentY),
+                Size = new Size(130, 36),
                 BackColor = ColPrimary,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -384,10 +377,11 @@ namespace LogRedactor
             {
                 Text = "Cancel",
                 Font = new Font("Segoe UI", 9.0F),
-                Location = new Point(172, y),
+                Location = new Point(164, currentY),
                 Size = new Size(90, 36),
                 Enabled = false,
-                FlatStyle = FlatStyle.System
+                FlatStyle = FlatStyle.System,
+                Cursor = Cursors.Hand
             };
             btnCancel.Click += delegate(object s, EventArgs e) { CancelRedaction(); };
 
@@ -395,8 +389,8 @@ namespace LogRedactor
             {
                 Text = "Preview Sample (50 Lines)",
                 Font = new Font("Segoe UI", 9.0F),
-                Location = new Point(270, y),
-                Size = new Size(185, 36),
+                Location = new Point(264, currentY),
+                Size = new Size(190, 36),
                 FlatStyle = FlatStyle.System,
                 Cursor = Cursors.Hand
             };
@@ -406,27 +400,29 @@ namespace LogRedactor
             pnlBody.Controls.Add(btnCancel);
             pnlBody.Controls.Add(btnPreview);
 
-            y += 46;
+            currentY += 48;
 
-            // 6. Progress and Metrics
+            // ==========================================
+            // 7. PROGRESS & STATUS TELEMETRY
+            // ==========================================
             prgProgress = new ProgressBar
             {
-                Location = new Point(24, y),
-                Size = new Size(794, 10),
+                Location = new Point(24, currentY),
+                Size = new Size(pnlBody.ClientSize.Width - 48, 8),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Value = 0
             };
             pnlBody.Controls.Add(prgProgress);
 
-            y += 14;
+            currentY += 14;
 
             lblStatus = new Label
             {
                 Text = "Ready",
                 Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
                 ForeColor = ColTextSecondary,
-                Location = new Point(24, y),
-                Size = new Size(420, 18),
+                Location = new Point(24, currentY),
+                Size = new Size(380, 18),
                 UseMnemonic = false
             };
 
@@ -435,8 +431,8 @@ namespace LogRedactor
                 Text = "",
                 Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
                 ForeColor = ColTextSecondary,
-                Location = new Point(450, y),
-                Size = new Size(368, 18),
+                Location = new Point(pnlBody.ClientSize.Width - 24 - 450, currentY),
+                Size = new Size(450, 18),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 TextAlign = ContentAlignment.TopRight,
                 UseMnemonic = false
@@ -445,13 +441,15 @@ namespace LogRedactor
             pnlBody.Controls.Add(lblStatus);
             pnlBody.Controls.Add(lblMetrics);
 
-            y += 26;
+            currentY += 26;
 
-            // 7. Activity & Console Card
-            pnlConsoleCard = new Panel
+            // ==========================================
+            // 8. CONSOLE / ACTIVITY LOG CARD (Anchored to Bottom)
+            // ==========================================
+            Panel pnlConsoleCard = new Panel
             {
-                Location = new Point(24, y),
-                Size = new Size(794, 210),
+                Location = new Point(24, currentY),
+                Size = new Size(pnlBody.ClientSize.Width - 48, pnlBody.ClientSize.Height - currentY - 16),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 BackColor = ColCard
             };
@@ -463,12 +461,12 @@ namespace LogRedactor
                 }
             };
 
-            lblConsoleHeader = new Label
+            Label lblConsoleHeader = new Label
             {
                 Text = "Activity Log & Sample Preview",
                 Font = new Font("Segoe UI Semibold", 8.75F, FontStyle.Bold),
                 ForeColor = ColTextPrimary,
-                Location = new Point(12, 8),
+                Location = new Point(14, 8),
                 Size = new Size(300, 18),
                 UseMnemonic = false
             };
@@ -477,8 +475,8 @@ namespace LogRedactor
             {
                 Multiline = true,
                 ScrollBars = ScrollBars.Both,
-                Location = new Point(1, 30),
-                Size = new Size(792, 178),
+                Location = new Point(2, 30),
+                Size = new Size(pnlConsoleCard.Width - 4, pnlConsoleCard.Height - 32),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Font = new Font("Consolas", 9.0F),
                 BackColor = Color.FromArgb(250, 252, 255),

@@ -9,27 +9,16 @@ namespace LogRedactor
         [DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
 
-        [DllImport("shcore.dll")]
-        private static extern int SetProcessDpiAwareness(int awareness);
-
         [STAThread]
         static void Main()
         {
             try
             {
-                // Process_Per_Monitor_DPI_Aware = 2
-                SetProcessDpiAwareness(2);
+                SetProcessDPIAware();
             }
             catch
             {
-                try
-                {
-                    SetProcessDPIAware();
-                }
-                catch
-                {
-                    // Fall back to default GDI rendering
-                }
+                // Fallback to default rendering
             }
 
             Application.EnableVisualStyles();
